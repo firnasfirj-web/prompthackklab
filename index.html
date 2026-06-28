@@ -3,750 +3,1388 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prompt Hack Lab</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>Prompt Hack Lab — Premium Prompts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
     <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: #1a1a2e;
-            --bg-card-hover: #222240;
-            --accent: #00f0ff;
-            --accent2: #7b2fff;
-            --accent3: #ff2d95;
-            --text-primary: #e8e8f0;
-            --text-secondary: #8888aa;
-            --border: #2a2a40;
-            --glass: rgba(26, 26, 46, 0.7);
+            --bg: #0a0a0c;
+            --bg2: #111115;
+            --card: #16161a;
+            --card-hover: #1c1c22;
+            --border: #2a2a32;
+            --fg: #e8e6e3;
+            --fg-dim: #8a8a96;
+            --accent: #d4a843;
+            --accent-glow: rgba(212, 168, 67, 0.25);
+            --accent-dark: #b8912e;
+            --danger: #e84057;
+            --success: #34d399;
+            --radius: 14px;
         }
-
-        html { scroll-behavior: smooth; }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* ===== ANIMATED BACKGROUND ===== */
+        /* Background atmosphere */
+        .bg-atmosphere {
+            position: fixed; inset: 0; z-index: 0;
+            pointer-events: none; overflow: hidden;
+        }
+        .bg-atmosphere .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(120px);
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .bg-atmosphere .orb-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(212,168,67,0.08), transparent 70%);
+            top: -200px; left: -100px;
+        }
+        .bg-atmosphere .orb-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(212,168,67,0.05), transparent 70%);
+            bottom: -150px; right: -100px;
+            animation-delay: -10s;
+        }
+        .bg-atmosphere .orb-3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(212,168,67,0.04), transparent 70%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            animation-delay: -5s;
+        }
         .bg-grid {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
             background-image:
-                linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-            z-index: 0; pointer-events: none;
+                linear-gradient(rgba(212,168,67,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(212,168,67,0.02) 1px, transparent 1px);
+            background-size: 80px 80px;
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.05); }
+            66% { transform: translate(-20px, 15px) scale(0.95); }
         }
 
-        .bg-glow {
-            position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle at 30% 40%, rgba(0,240,255,0.04) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 60%, rgba(123,47,255,0.04) 0%, transparent 50%),
-                        radial-gradient(circle at 50% 80%, rgba(255,45,149,0.03) 0%, transparent 50%);
-            z-index: 0; pointer-events: none; animation: glowMove 20s ease-in-out infinite;
-        }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-        @keyframes glowMove {
-            0%, 100% { transform: translate(0, 0); }
-            33% { transform: translate(2%, -2%); }
-            66% { transform: translate(-2%, 2%); }
-        }
-
-        /* ===== NAVBAR ===== */
-        nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-            background: rgba(10,10,15,0.85);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        /* Header */
+        header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(10,10,12,0.8);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
-            padding: 0 2rem; height: 70px;
-            display: flex; align-items: center; justify-content: space-between;
+            transition: all 0.3s ease;
         }
-
-        .nav-brand {
-            display: flex; align-items: center; gap: 12px; text-decoration: none;
+        header.scrolled {
+            background: rgba(10,10,12,0.95);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.4);
         }
-
-        .nav-logo {
+        .header-inner {
+            max-width: 1280px; margin: 0 auto; padding: 0 24px;
+            height: 72px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none; color: var(--fg);
+        }
+        .logo-icon {
             width: 42px; height: 42px;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            border-radius: 10px; display: flex; align-items: center; justify-content: center;
-            font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 18px;
-            color: #0a0a0f; box-shadow: 0 0 20px rgba(0,240,255,0.3);
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; color: var(--bg); font-weight: 700;
+            box-shadow: 0 0 20px var(--accent-glow);
         }
-
-        .nav-title {
-            font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1.3rem;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .logo-text {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800; font-size: 20px; letter-spacing: -0.5px;
         }
+        .logo-text span { color: var(--accent); }
 
-        .nav-links { display: flex; align-items: center; gap: 20px; }
-
-        .nav-links a {
-            color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;
-            font-weight: 500; transition: all 0.3s; position: relative;
+        .nav-actions { display: flex; align-items: center; gap: 12px; }
+        .admin-toggle {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--fg-dim); width: 40px; height: 40px;
+            border-radius: 10px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; transition: all 0.3s ease;
         }
-
-        .nav-links a:hover { color: var(--accent); }
-
-        .nav-links a::after {
-            content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px;
-            background: var(--accent); transition: width 0.3s;
+        .admin-toggle:hover {
+            border-color: var(--accent); color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
         }
-
-        .nav-links a:hover::after { width: 100%; }
-
-        .btn-admin {
-            background: linear-gradient(135deg, var(--accent2), var(--accent3));
-            color: #fff; padding: 8px 20px; border-radius: 8px; border: none;
-            cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600;
-            font-size: 0.85rem; transition: all 0.3s; text-decoration: none;
+        .prompt-count-badge {
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--fg-dim); padding: 8px 16px; border-radius: 10px;
+            font-size: 13px; font-weight: 500;
         }
+        .prompt-count-badge strong { color: var(--accent); }
 
-        .btn-admin:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(123,47,255,0.4); }
-
-        /* ===== HERO SECTION ===== */
-        .hero {
-            min-height: 70vh; display: flex; align-items: center; justify-content: center;
-            text-align: center; padding: 120px 2rem 60px; position: relative; z-index: 1;
+        /* DB Status Indicator */
+        .db-status {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; color: var(--fg-dim);
+            background: var(--card); border: 1px solid var(--border);
+            padding: 6px 12px; border-radius: 8px;
         }
-
-        .hero-content { max-width: 800px; }
-
-        .hero-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(0,240,255,0.08); border: 1px solid rgba(0,240,255,0.2);
-            padding: 6px 18px; border-radius: 50px; font-size: 0.8rem;
-            color: var(--accent); margin-bottom: 2rem;
-            font-family: 'JetBrains Mono', monospace;
+        .db-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--danger); transition: background 0.3s ease;
         }
-
-        .hero-badge .pulse {
-            width: 8px; height: 8px; background: var(--accent); border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
+        .db-dot.connected { background: var(--success); animation: pulse 2s ease-in-out infinite; }
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(0.8); }
         }
 
+        main { position: relative; z-index: 1; padding-top: 72px; }
+
+        /* Hero */
+        .hero { padding: 80px 24px 60px; text-align: center; position: relative; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(212,168,67,0.08);
+            border: 1px solid rgba(212,168,67,0.15);
+            color: var(--accent); padding: 8px 20px; border-radius: 100px;
+            font-size: 13px; font-weight: 500; margin-bottom: 28px;
+            animation: fadeInUp 0.6s ease;
+        }
+        .hero-badge .dot {
+            width: 6px; height: 6px; background: var(--accent);
+            border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+        }
         .hero h1 {
-            font-family: 'Orbitron', sans-serif; font-size: clamp(2.5rem, 6vw, 4.5rem);
-            font-weight: 900; line-height: 1.1; margin-bottom: 1.5rem;
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(40px, 7vw, 80px);
+            font-weight: 800; line-height: 1.05; letter-spacing: -2px;
+            margin-bottom: 20px; animation: fadeInUp 0.6s ease 0.1s both;
         }
-
-        .hero h1 .gradient-text {
-            background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero p {
-            font-size: 1.1rem; color: var(--text-secondary); line-height: 1.8;
-            max-width: 600px; margin: 0 auto 2.5rem;
-        }
-
-        .hero-stats {
-            display: flex; justify-content: center; gap: 3rem; margin-top: 3rem;
-        }
-
-        .hero-stat { text-align: center; }
-
-        .hero-stat .number {
-            font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 700;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
+        .hero h1 .accent {
+            background: linear-gradient(135deg, var(--accent), #f0d078);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-
-        .hero-stat .label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
-
-        /* ===== PROMPTS SECTION ===== */
-        .section { padding: 4rem 2rem; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
-
-        .section-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+        .hero p {
+            color: var(--fg-dim); font-size: 18px; max-width: 560px;
+            margin: 0 auto 36px; line-height: 1.7;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+        .hero-stats {
+            display: flex; justify-content: center; gap: 48px;
+            animation: fadeInUp 0.6s ease 0.3s both;
+        }
+        .hero-stat .num {
+            font-family: 'Syne', sans-serif;
+            font-size: 32px; font-weight: 700; color: var(--accent);
+        }
+        .hero-stat .label { font-size: 13px; color: var(--fg-dim); margin-top: 2px; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .section-title {
-            font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 700;
+        .section-divider { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+        .section-divider hr {
+            border: none; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
         }
 
-        .section-title .highlight { color: var(--accent); }
-
-        .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; }
-
-        .filter-btn {
-            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
-            padding: 8px 18px; border-radius: 50px; cursor: pointer; font-size: 0.82rem;
-            transition: all 0.3s; font-family: 'Inter', sans-serif;
+        /* Search / Filter Bar */
+        .filter-bar {
+            max-width: 1280px; margin: 0 auto; padding: 40px 24px 24px;
+            display: flex; gap: 12px; flex-wrap: wrap;
+        }
+        .search-box { flex: 1; min-width: 260px; position: relative; }
+        .search-box i {
+            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+            color: var(--fg-dim); font-size: 14px;
+        }
+        .search-box input {
+            width: 100%; background: var(--card); border: 1px solid var(--border);
+            color: var(--fg); padding: 14px 16px 14px 44px; border-radius: var(--radius);
+            font-family: inherit; font-size: 14px; outline: none; transition: all 0.3s ease;
+        }
+        .search-box input::placeholder { color: var(--fg-dim); }
+        .search-box input:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .category-filter { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .cat-btn {
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--fg-dim); padding: 12px 20px; border-radius: var(--radius);
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: all 0.3s ease; white-space: nowrap;
+        }
+        .cat-btn:hover { border-color: var(--fg-dim); color: var(--fg); }
+        .cat-btn.active {
+            background: rgba(212,168,67,0.1);
+            border-color: var(--accent); color: var(--accent);
         }
 
-        .filter-btn:hover, .filter-btn.active {
-            background: rgba(0,240,255,0.1); border-color: var(--accent); color: var(--accent);
+        /* Prompt Grid */
+        .prompt-section { max-width: 1280px; margin: 0 auto; padding: 24px 24px 80px; }
+        .prompt-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;
         }
-
-        /* ===== PROMPT CARDS ===== */
-        .prompts-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 1.5rem;
-        }
-
         .prompt-card {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 16px; padding: 1.5rem; position: relative;
-            transition: all 0.4s; overflow: hidden;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 28px;
+            transition: all 0.4s ease; position: relative; overflow: hidden;
+            animation: cardIn 0.5s ease both;
         }
-
         .prompt-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
-            opacity: 0; transition: opacity 0.3s;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            opacity: 0; transition: opacity 0.3s ease;
         }
-
-        .prompt-card:hover { border-color: rgba(0,240,255,0.3); transform: translateY(-4px);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
-
+        .prompt-card:hover {
+            border-color: rgba(212,168,67,0.3); transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 30px var(--accent-glow);
+        }
         .prompt-card:hover::before { opacity: 1; }
-
-        .card-header { display: flex; align-items: start; justify-content: space-between; margin-bottom: 1rem; }
-
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-top {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; margin-bottom: 16px;
+        }
         .card-category {
-            font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
-            color: var(--accent); text-transform: uppercase; letter-spacing: 1px;
-            background: rgba(0,240,255,0.08); padding: 4px 10px; border-radius: 4px;
+            background: rgba(212,168,67,0.1); color: var(--accent);
+            padding: 5px 12px; border-radius: 6px;
+            font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
         }
-
-        .card-featured {
-            color: var(--accent3); font-size: 0.85rem;
-        }
-
+        .card-date { color: var(--fg-dim); font-size: 12px; }
         .card-title {
-            font-size: 1.15rem; font-weight: 600; margin-bottom: 0.7rem; line-height: 1.4;
+            font-family: 'Syne', sans-serif;
+            font-size: 20px; font-weight: 700; margin-bottom: 10px; line-height: 1.3;
         }
-
         .card-desc {
-            font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;
-            margin-bottom: 1.2rem;
-            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-            overflow: hidden;
+            color: var(--fg-dim); font-size: 14px; line-height: 1.65; margin-bottom: 20px;
+            display: -webkit-box; -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical; overflow: hidden;
         }
-
         .card-meta {
-            display: flex; align-items: center; justify-content: space-between;
-            padding-top: 1rem; border-top: 1px solid var(--border);
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 20px; font-size: 12px; color: var(--fg-dim);
         }
+        .card-meta span { display: flex; align-items: center; gap: 5px; }
+        .card-meta i { color: var(--accent); font-size: 11px; }
 
-        .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-
-        .card-tag {
-            font-size: 0.7rem; color: var(--text-secondary); background: var(--bg-secondary);
-            padding: 3px 8px; border-radius: 4px;
+        .download-btn {
+            width: 100%; padding: 14px; border: none; border-radius: 10px;
+            font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
         }
-
-        .btn-download {
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #0a0a0f; border: none; padding: 10px 22px; border-radius: 8px;
-            cursor: pointer; font-weight: 700; font-size: 0.85rem;
-            font-family: 'Inter', sans-serif; transition: all 0.3s;
-            display: flex; align-items: center; gap: 6px;
+        .download-btn.primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: var(--bg);
         }
-
-        .btn-download:hover {
-            transform: scale(1.05); box-shadow: 0 4px 20px rgba(0,240,255,0.3);
+        .download-btn.primary:hover {
+            box-shadow: 0 4px 20px var(--accent-glow); transform: translateY(-1px);
         }
-
-        .btn-download.second-click {
-            background: linear-gradient(135deg, #00cc88, #00ff99);
-            animation: glowPulse 1s ease-in-out infinite;
+        .download-btn.secondary {
+            background: rgba(212,168,67,0.1);
+            border: 1px solid var(--accent); color: var(--accent);
         }
-
-        @keyframes glowPulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(0,255,153,0.3); }
-            50% { box-shadow: 0 0 25px rgba(0,255,153,0.6); }
+        .download-btn.secondary:hover {
+            background: rgba(212,168,67,0.2);
+            box-shadow: 0 4px 20px var(--accent-glow);
         }
+        .download-btn .btn-ripple {
+            position: absolute; border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: scale(0); animation: ripple 0.6s ease-out; pointer-events: none;
+        }
+        @keyframes ripple { to { transform: scale(4); opacity: 0; } }
 
-        /* ===== MODALS ===== */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        .empty-state {
+            text-align: center; padding: 80px 24px; grid-column: 1 / -1;
+        }
+        .empty-state i { font-size: 48px; color: var(--border); margin-bottom: 20px; }
+        .empty-state h3 {
+            font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 8px;
+        }
+        .empty-state p { color: var(--fg-dim); font-size: 14px; }
+
+        /* Loading Spinner */
+        .loading-state {
+            text-align: center; padding: 80px 24px; grid-column: 1 / -1;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-state p { color: var(--fg-dim); font-size: 14px; }
+
+        /* Admin Panel Overlay */
+        .admin-overlay {
+            position: fixed; inset: 0; z-index: 200;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-            z-index: 2000; display: none; align-items: center; justify-content: center;
-            padding: 1rem;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
-
-        .modal-overlay.active { display: flex; }
-
-        .modal {
-            background: var(--bg-secondary); border: 1px solid var(--border);
-            border-radius: 20px; width: 100%; max-width: 550px; padding: 2rem;
-            position: relative; animation: modalIn 0.3s ease;
+        .admin-overlay.open { opacity: 1; pointer-events: all; }
+        .admin-panel {
+            background: var(--bg2); border: 1px solid var(--border);
+            border-radius: 20px; width: 90%; max-width: 640px; max-height: 90vh;
+            overflow-y: auto; transform: translateY(20px) scale(0.97);
+            transition: transform 0.3s ease;
         }
-
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+        .admin-overlay.open .admin-panel { transform: translateY(0) scale(1); }
+        .admin-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 24px 28px; border-bottom: 1px solid var(--border);
         }
-
-        .modal-close {
-            position: absolute; top: 1rem; right: 1rem; background: none; border: none;
-            color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;
-            transition: color 0.3s;
+        .admin-header h2 {
+            font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700;
         }
-
-        .modal-close:hover { color: var(--text-primary); }
-
-        .modal h2 {
-            font-family: 'Orbitron', sans-serif; font-size: 1.4rem; margin-bottom: 1.5rem;
+        .admin-close {
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--fg-dim); width: 36px; height: 36px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 14px; transition: all 0.3s ease;
         }
+        .admin-close:hover { border-color: var(--danger); color: var(--danger); }
 
-        .form-group { margin-bottom: 1.2rem; }
-
+        .admin-body {
+            padding: 28px; display: flex; flex-direction: column; gap: 20px;
+        }
         .form-group label {
-            display: block; font-size: 0.85rem; color: var(--text-secondary);
-            margin-bottom: 6px; font-weight: 500;
+            display: block; font-size: 13px; font-weight: 600;
+            color: var(--fg-dim); margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%; background: var(--card); border: 1px solid var(--border);
+            color: var(--fg); padding: 12px 16px; border-radius: 10px;
+            font-family: inherit; font-size: 14px; outline: none; transition: all 0.3s ease;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .form-group textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+        .form-group select option { background: var(--card); color: var(--fg); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .file-upload-area {
+            border: 2px dashed var(--border); border-radius: var(--radius);
+            padding: 32px; text-align: center; cursor: pointer;
+            transition: all 0.3s ease; position: relative;
+        }
+        .file-upload-area:hover,
+        .file-upload-area.dragover {
+            border-color: var(--accent); background: rgba(212,168,67,0.03);
+        }
+        .file-upload-area i { font-size: 28px; color: var(--fg-dim); margin-bottom: 10px; }
+        .file-upload-area p { color: var(--fg-dim); font-size: 13px; }
+        .file-upload-area .file-name {
+            color: var(--accent); font-weight: 600; margin-top: 8px; font-size: 13px;
+        }
+        .file-upload-area input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
         }
 
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%; background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 10px; padding: 12px 16px; color: var(--text-primary);
-            font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: border-color 0.3s;
+        .admin-submit {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: var(--bg); border: none; padding: 16px; border-radius: 12px;
+            font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .admin-submit:hover {
+            box-shadow: 0 4px 24px var(--accent-glow); transform: translateY(-1px);
         }
 
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-            outline: none; border-color: var(--accent);
+        .redirect-config {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px;
+        }
+        .redirect-config label {
+            display: block; font-size: 13px; font-weight: 600;
+            color: var(--fg-dim); margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .redirect-config input {
+            width: 100%; background: var(--bg); border: 1px solid var(--border);
+            color: var(--fg); padding: 12px 16px; border-radius: 10px;
+            font-family: inherit; font-size: 13px; outline: none; transition: all 0.3s ease;
+        }
+        .redirect-config input:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .redirect-config .hint { font-size: 11px; color: var(--fg-dim); margin-top: 6px; }
+
+        .admin-prompt-list { border-top: 1px solid var(--border); padding-top: 20px; }
+        .admin-prompt-list h3 {
+            font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--fg-dim);
+        }
+        .admin-prompt-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; background: var(--card); border: 1px solid var(--border);
+            border-radius: 10px; margin-bottom: 8px; transition: all 0.3s ease;
+        }
+        .admin-prompt-item:hover { border-color: rgba(212,168,67,0.2); }
+        .admin-prompt-item .item-info { flex: 1; min-width: 0; }
+        .admin-prompt-item .item-title {
+            font-weight: 600; font-size: 14px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .admin-prompt-item .item-cat { font-size: 11px; color: var(--fg-dim); margin-top: 2px; }
+        .admin-prompt-item .item-delete {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--fg-dim); width: 32px; height: 32px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 12px; transition: all 0.3s ease; flex-shrink: 0; margin-left: 12px;
+        }
+        .admin-prompt-item .item-delete:hover {
+            border-color: var(--danger); color: var(--danger);
+            background: rgba(232,64,87,0.08);
         }
 
-        .form-group textarea { min-height: 100px; resize: vertical; }
-
-        .btn-submit {
-            width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #0a0a0f; border: none; padding: 14px; border-radius: 10px;
-            cursor: pointer; font-weight: 700; font-size: 1rem;
-            font-family: 'Inter', sans-serif; transition: all 0.3s; margin-top: 0.5rem;
-        }
-
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0,240,255,0.3); }
-
-        /* ===== ADMIN LOGIN ===== */
-        .login-input {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 10px; padding: 12px 16px; color: var(--text-primary);
-            font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;
-            width: 100%; margin-top: 0.5rem;
-        }
-
-        .login-input:focus { outline: none; border-color: var(--accent2); }
-
-        /* ===== TOAST ===== */
+        /* Toast */
         .toast-container {
-            position: fixed; top: 80px; right: 20px; z-index: 3000;
+            position: fixed; top: 88px; right: 24px; z-index: 300;
             display: flex; flex-direction: column; gap: 10px;
         }
-
         .toast {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
-            padding: 14px 20px; min-width: 280px; display: flex; align-items: center; gap: 10px;
-            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 20px;
+            display: flex; align-items: center; gap: 10px;
+            font-size: 13px; font-weight: 500;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            animation: toastIn 0.4s ease; min-width: 280px;
         }
-
-        .toast.success { border-left: 4px solid #00ff99; }
-        .toast.error { border-left: 4px solid var(--accent3); }
-        .toast.info { border-left: 4px solid var(--accent); }
-
-        @keyframes toastIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(50px); } }
-
-        /* ===== EMPTY STATE ===== */
-        .empty-state {
-            text-align: center; padding: 4rem 2rem; color: var(--text-secondary);
+        .toast.success { border-left: 3px solid var(--success); }
+        .toast.success i { color: var(--success); }
+        .toast.error { border-left: 3px solid var(--danger); }
+        .toast.error i { color: var(--danger); }
+        .toast.info { border-left: 3px solid var(--accent); }
+        .toast.info i { color: var(--accent); }
+        .toast-exit { animation: toastOut 0.3s ease forwards; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
         }
+        @keyframes toastOut { to { opacity: 0; transform: translateX(40px); } }
 
-        .empty-state i { font-size: 3rem; margin-bottom: 1rem; color: var(--border); }
-
-        /* ===== FOOTER ===== */
         footer {
-            text-align: center; padding: 3rem 2rem; border-top: 1px solid var(--border);
-            margin-top: 4rem; position: relative; z-index: 1;
+            position: relative; z-index: 1;
+            border-top: 1px solid var(--border); padding: 40px 24px; text-align: center;
+        }
+        footer p { color: var(--fg-dim); font-size: 13px; }
+        footer .footer-brand {
+            font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent);
         }
 
-        .footer-brand {
-            font-family: 'Orbitron', sans-serif; font-weight: 700;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-            font-size: 1.1rem; margin-bottom: 0.5rem;
+        #particles-canvas {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
         }
 
-        footer p { color: var(--text-secondary); font-size: 0.85rem; }
-
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .nav-links a:not(.btn-admin) { display: none; }
-            .prompts-grid { grid-template-columns: 1fr; }
-            .hero-stats { flex-direction: column; gap: 1.5rem; }
+            .hero { padding: 60px 20px 40px; }
+            .hero-stats { gap: 28px; }
+            .hero-stat .num { font-size: 24px; }
+            .prompt-grid { grid-template-columns: 1fr; }
+            .filter-bar { flex-direction: column; }
+            .form-row { grid-template-columns: 1fr; }
+            .admin-panel { width: 95%; }
+            .admin-body { padding: 20px; }
+            .header-inner { padding: 0 16px; }
+            .prompt-section { padding: 24px 16px 60px; }
+            .filter-bar { padding: 24px 16px 16px; }
+            .db-status { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Background Effects -->
+    <div class="bg-atmosphere">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
     <div class="bg-grid"></div>
-    <div class="bg-glow"></div>
+    <canvas id="particles-canvas"></canvas>
 
-    <!-- NAVBAR -->
-    <nav>
-        <a href="#" class="nav-brand">
-            <div class="nav-logo">PH</div>
-            <span class="nav-title">PROMPT HACK LAB</span>
-        </a>
-        <div class="nav-links">
-            <a href="#prompts">Browse</a>
-            <a href="#" onclick="openUploadModal()">Upload</a>
-            <button class="btn-admin" onclick="openAdminLogin()"><i class="fas fa-lock"></i> Admin</button>
+    <!-- Header -->
+    <header id="header">
+        <div class="header-inner">
+            <a href="#" class="logo" onclick="location.reload(); return false;">
+                <div class="logo-icon"><i class="fas fa-flask"></i></div>
+                <div class="logo-text">Prompt Hack <span>Lab</span></div>
+            </a>
+            <div class="nav-actions">
+                <div class="db-status">
+                    <div class="db-dot" id="dbDot"></div>
+                    <span id="dbStatusText">Connecting...</span>
+                </div>
+                <div class="prompt-count-badge">
+                    <strong id="totalPromptCount">0</strong> Prompts
+                </div>
+                <button class="admin-toggle" id="adminToggleBtn" title="Admin Panel" aria-label="Open Admin Panel">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
         </div>
-    </nav>
+    </header>
 
-    <!-- HERO -->
-    <section class="hero">
-        <div class="hero-content">
-            <div class="hero-badge"><div class="pulse"></div> Curated AI Prompts</div>
-            <h1>Unlock the Power of <span class="gradient-text">Prompt Engineering</span></h1>
-            <p>Discover, download, and deploy battle-tested AI prompts crafted for maximum performance. Your secret weapon for AI mastery.</p>
+    <!-- Main Content -->
+    <main>
+        <section class="hero">
+            <div class="hero-badge">
+                <div class="dot"></div>
+                Fresh Prompts Added Regularly
+            </div>
+            <h1>Hack Your Creativity<br>With <span class="accent">Premium Prompts</span></h1>
+            <p>Curated, battle-tested prompts for AI models. Download instantly and supercharge your workflow.</p>
             <div class="hero-stats">
-                <div class="hero-stat"><div class="number" id="promptCount">0</div><div class="label">Prompts</div></div>
-                <div class="hero-stat"><div class="number" id="downloadCount">0</div><div class="label">Downloads</div></div>
-                <div class="hero-stat"><div class="number" id="categoryCount">0</div><div class="label">Categories</div></div>
+                <div class="hero-stat">
+                    <div class="num" id="statPrompts">0</div>
+                    <div class="label">Total Prompts</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="num" id="statCategories">0</div>
+                    <div class="label">Categories</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="num" id="statDownloads">0</div>
+                    <div class="label">Downloads</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"><hr></div>
+
+        <div class="filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search prompts..." aria-label="Search prompts">
+            </div>
+            <div class="category-filter" id="categoryFilter">
+                <button class="cat-btn active" data-cat="all">All</button>
             </div>
         </div>
-    </section>
 
-    <!-- PROMPTS SECTION -->
-    <section class="section" id="prompts">
-        <div class="section-header">
-            <h2 class="section-title">Latest <span class="highlight">Prompts</span></h2>
-            <div class="filter-bar">
-                <button class="filter-btn active" onclick="filterPrompts('all')">All</button>
+        <section class="prompt-section">
+            <div class="prompt-grid" id="promptGrid">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Connecting to database...</p>
+                </div>
             </div>
-        </div>
-        <div class="prompts-grid" id="promptsGrid"></div>
-    </section>
+        </section>
+    </main>
 
-    <!-- FOOTER -->
     <footer>
-        <div class="footer-brand">PROMPT HACK LAB</div>
-        <p>&copy; 2026 Prompt Hack Lab. All rights reserved.</p>
+        <p>&copy; 2025 <span class="footer-brand">Prompt Hack Lab</span>. All rights reserved.</p>
     </footer>
 
-    <!-- ADMIN LOGIN MODAL -->
-    <div class="modal-overlay" id="adminLoginModal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('adminLoginModal')">&times;</button>
-            <h2><i class="fas fa-shield-halved" style="color:var(--accent2);"></i> Admin Access</h2>
-            <form onsubmit="adminLogin(event)">
-                <div class="form-group">
-                    <label>Enter Admin Password</label>
-                    <input type="password" class="login-input" id="adminPassword" placeholder="••••••••" autocomplete="off">
+    <!-- Admin Panel Overlay -->
+    <div class="admin-overlay" id="adminOverlay" role="dialog" aria-modal="true" aria-label="Admin Panel">
+        <div class="admin-panel">
+            <div class="admin-header">
+                <h2><i class="fas fa-shield-halved" style="color:var(--accent);margin-right:8px;"></i> Admin Panel</h2>
+                <button class="admin-close" id="adminCloseBtn" aria-label="Close Admin Panel"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="admin-body">
+                <div class="redirect-config">
+                    <label><i class="fas fa-link" style="margin-right:6px;"></i>Redirect URL (First Click)</label>
+                    <input type="url" id="redirectUrlInput" placeholder="https://your-affiliate-link.com/...">
+                    <div class="hint">Users will be sent here on the first click. On the second click, the download starts.</div>
                 </div>
-                <button type="submit" class="btn-submit">Unlock Dashboard</button>
-            </form>
+
+                <form id="uploadForm" autocomplete="off">
+                    <div class="form-group">
+                        <label>Prompt Title</label>
+                        <input type="text" id="promptTitle" placeholder="e.g. Midjourney Cinematic Scene Prompt" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="promptDesc" placeholder="Brief description of what this prompt does..." required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="promptCategory">
+                                <option value="ChatGPT">ChatGPT</option>
+                                <option value="Midjourney">Midjourney</option>
+                                <option value="DALL-E">DALL-E</option>
+                                <option value="Stable Diffusion">Stable Diffusion</option>
+                                <option value="Claude">Claude</option>
+                                <option value="Gemini">Gemini</option>
+                                <option value="Coding">Coding</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Writing">Writing</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>File Type</label>
+                            <select id="fileType">
+                                <option value="text/plain">TXT</option>
+                                <option value="text/markdown">Markdown</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Prompt Content (or upload a file below)</label>
+                        <textarea id="promptContent" placeholder="Paste your full prompt text here..." style="min-height:100px;"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Or Upload File</label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <i class="fas fa-cloud-arrow-up"></i>
+                            <p>Drop file here or click to browse</p>
+                            <div class="file-name" id="fileName"></div>
+                            <input type="file" id="fileInput" accept=".txt,.md">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="admin-submit">
+                        <i class="fas fa-plus"></i> Add Prompt
+                    </button>
+                </form>
+
+                <div class="admin-prompt-list" id="adminPromptList" style="display:none;">
+                    <h3><i class="fas fa-list" style="margin-right:6px;"></i>Manage Existing Prompts</h3>
+                    <div id="adminPromptItems"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- UPLOAD MODAL -->
-    <div class="modal-overlay" id="uploadModal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('uploadModal')">&times;</button>
-            <h2><i class="fas fa-cloud-arrow-up" style="color:var(--accent);"></i> Upload Prompt</h2>
-            <form onsubmit="uploadPrompt(event)">
-                <div class="form-group">
-                    <label>Prompt Title *</label>
-                    <input type="text" id="promptTitle" placeholder="e.g. Ultimate Midjourney V6 Prompt" required>
-                </div>
-                <div class="form-group">
-                    <label>Category *</label>
-                    <select id="promptCategory" required>
-                        <option value="">Select category</option>
-                        <option value="ChatGPT">ChatGPT</option>
-                        <option value="Midjourney">Midjourney</option>
-                        <option value="Stable Diffusion">Stable Diffusion</option>
-                        <option value="DALL-E">DALL-E</option>
-                        <option value="Coding">Coding</option>
-                        <option value="Marketing">Marketing</option>
-                        <option value="Writing">Writing</option>
-                        <option value="Business">Business</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Description *</label>
-                    <textarea id="promptDesc" placeholder="Brief description of what this prompt does..." required></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Prompt Content *</label>
-                    <textarea id="promptContent" placeholder="Paste the full prompt text here..." required style="min-height:140px;"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Redirect Link (first click) *</label>
-                    <input type="url" id="promptRedirect" placeholder="https://example.com/your-link" required>
-                </div>
-                <div class="form-group">
-                    <label>Tags (comma-separated)</label>
-                    <input type="text" id="promptTags" placeholder="e.g. ai, art, creative">
-                </div>
-                <button type="submit" class="btn-submit"><i class="fas fa-rocket"></i> Publish Prompt</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- TOAST CONTAINER -->
+    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
-        // ===== CONFIG =====
-        const ADMIN_PASSWORD = 'Firnas1999@';
-        let isAdmin = false;
-        let prompts = [];
-        let clickStates = {}; // track first-click state per prompt
+        // ============================================================
+        //  FIREBASE CONFIGURATION
+        //  Replace these values with your own from Firebase Console
+        //  Project Settings > Your Apps > Web App > Config
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPUzx5JbHacz7Rs9LDgA5ps3ge-SFdzmM",
+            authDomain: "prompt-hack-lab.firebaseapp.com",
+            databaseURL: "https://console.firebase.google.com/project/prompt-hack-lab/settings/general/web:OWY0ODM2N2UtOGU1ZS00ODFhLTk0NjMtZjNkZjZhZWYzNWUw",
+            projectId: "prompt-hack-lab",
+            storageBucket: "prompt-hack-lab.firebasestorage.app",
+            messagingSenderId: "150199660353",
+            appId: "1:150199660353:web:2273ab8d813f8bccb3fbc0"
+        };
 
-        // ===== INIT =====
-        function init() {
-            const stored = localStorage.getItem('phl_prompts');
-            if (stored) prompts = JSON.parse(stored);
-            else loadDefaults();
-            renderPrompts();
-            updateStats();
-        }
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        function loadDefaults() {
-            prompts = [
-                {
-                    id: 'p1', title: 'Cinematic Midjourney V6 Master Prompt',
-                    category: 'Midjourney',
-                    desc: 'Generate breathtaking, hyper-detailed cinematic scenes with perfect lighting and composition. Works with Midjourney V6 for photorealistic outputs.',
-                    content: 'cinematic photography, {subject}, dramatic {lighting} lighting, shot on ARRI Alexa 65, anamorphic lens, shallow depth of field, film grain, color grading by {colorist}, 8K resolution, photorealistic --ar 16:9 --v 6 --style raw',
-                    redirect: 'https://www.youtube.com/@yourchannel',
-                    tags: ['midjourney', 'cinematic', 'photorealistic'],
-                    featured: true,
-                    date: '2026-06-27'
-                },
-                {
-                    id: 'p2', title: 'ChatGPT Expert System Prompt',
-                    category: 'ChatGPT',
-                    desc: 'Transform ChatGPT into an elite domain expert who provides structured, actionable advice with zero fluff.',
-                    content: 'You are an elite {domain} expert with 30 years of experience. When I ask a question: 1) Give a direct answer first. 2) Provide a detailed explanation. 3) Include real-world examples. 4) List 3 actionable takeaways. 5) Suggest next steps. Never use filler phrases. Be concise and authoritative.',
-                    redirect: 'https://www.youtube.com/@yourchannel',
-                    tags: ['chatgpt', 'system-prompt', 'expert'],
-                    featured: false,
-                    date: '2026-06-26'
-                },
-                {
-                    id: 'p3', title: 'Viral Social Media Content Generator',
-                    category: 'Marketing',
-                    desc: 'Create scroll-stopping social media posts that drive engagement, saves, and shares across all platforms.',
-                    content: 'Create a viral {platform} post about {topic}. Requirements: Hook in first line (shock/pain/curiosity), use short paragraphs (2-3 lines max), include a counterintuitive insight, end with an engagement question, add 5 relevant hashtags. Tone: {tone}. Format: Make it scannable with line breaks and emojis.',
-                    redirect: 'https://www.youtube.com/@yourchannel',
-                    tags: ['social-media', 'marketing', 'viral'],
-                    featured: true,
-                    date: '2026-06-25'
-                }
-            ];
-            saveData();
-        }
-
-        // ===== RENDER =====
-        function renderPrompts(filter = 'all') {
-            const grid = document.getElementById('promptsGrid');
-            const filtered = filter === 'all' ? prompts : prompts.filter(p => p.category === filter);
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-folder-open"></i><p>No prompts found. Upload one now!</p></div>`;
-                return;
-            }
-
-            grid.innerHTML = filtered.map(p => `
-                <div class="prompt-card">
-                    <div class="card-header">
-                        <span class="card-category">${p.category}</span>
-                        ${p.featured ? '<span class="card-featured"><i class="fas fa-fire"></i> Featured</span>' : ''}
-                    </div>
-                    <h3 class="card-title">${p.title}</h3>
-                    <p class="card-desc">${p.desc}</p>
-                    <div class="card-meta">
-                        <div class="card-tags">${(p.tags || []).map(t => `<span class="card-tag">#${t}</span>`).join('')}</div>
-                        <button class="btn-download" id="dl-${p.id}" onclick="handleDownload('${p.id}')">
-                            <i class="fas fa-download"></i> Download
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-
-            // Reset click states
-            clickStates = {};
-        }
-
-        // ===== TWO-CLICK DOWNLOAD SYSTEM =====
-        function handleDownload(id) {
-            const prompt = prompts.find(p => p.id === id);
-            if (!prompt) return;
-
-            const btn = document.getElementById(`dl-${id}`);
-
-            if (!clickStates[id]) {
-                // FIRST CLICK → redirect to the specified link
-                clickStates[id] = true;
-                window.open(prompt.redirect, '_blank');
-                btn.classList.add('second-click');
-                btn.innerHTML = '<i class="fas fa-check-circle"></i> Click Again to Download';
-                showToast('Redirected! Click again to download the prompt.', 'info');
+        // Connection status tracking
+        let dbConnected = false;
+        db.ref('.info/connected').on('value', (snap) => {
+            dbConnected = snap.val() === true;
+            const dot = document.getElementById('dbDot');
+            const text = document.getElementById('dbStatusText');
+            if (dbConnected) {
+                dot.classList.add('connected');
+                text.textContent = 'DB Connected';
             } else {
-                // SECOND CLICK → download the prompt as a text file
-                const blob = new Blob([prompt.content], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${prompt.title.replace(/[^a-z0-9]/gi, '_')}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-                // Reset button
-                btn.classList.remove('second-click');
-                btn.innerHTML = '<i class="fas fa-download"></i> Download';
-                clickStates[id] = false;
-
-                // Update download count
-                let dc = parseInt(localStorage.getItem('phl_downloads') || '0') + 1;
-                localStorage.setItem('phl_downloads', dc);
-                updateStats();
-
-                showToast('Prompt downloaded successfully!', 'success');
+                dot.classList.remove('connected');
+                text.textContent = 'DB Offline';
             }
-        }
-
-        // ===== UPLOAD PROMPT =====
-        function uploadPrompt(e) {
-            e.preventDefault();
-            const title = document.getElementById('promptTitle').value.trim();
-            const category = document.getElementById('promptCategory').value;
-            const desc = document.getElementById('promptDesc').value.trim();
-            const content = document.getElementById('promptContent').value.trim();
-            const redirect = document.getElementById('promptRedirect').value.trim();
-            const tagsStr = document.getElementById('promptTags').value.trim();
-
-            if (!title || !category || !desc || !content || !redirect) {
-                showToast('Please fill in all required fields.', 'error');
-                return;
-            }
-
-            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim().toLowerCase()) : [];
-            const newPrompt = {
-                id: 'p' + Date.now(),
-                title, category, desc, content, redirect, tags,
-                featured: false,
-                date: new Date().toISOString().split('T')[0]
-            };
-
-            prompts.unshift(newPrompt);
-            saveData();
-            renderPrompts();
-            updateStats();
-            closeModal('uploadModal');
-            e.target.reset();
-            showToast('Prompt published successfully!', 'success');
-        }
-
-        // ===== ADMIN =====
-        function openAdminLogin() {
-            document.getElementById('adminLoginModal').classList.add('active');
-        }
-
-        function adminLogin(e) {
-            e.preventDefault();
-            const pw = document.getElementById('adminPassword').value;
-            if (pw === ADMIN_PASSWORD) {
-                isAdmin = true;
-                closeModal('adminLoginModal');
-                showToast('Admin access granted!', 'success');
-            } else {
-                showToast('Incorrect password.', 'error');
-            }
-            document.getElementById('adminPassword').value = '';
-        }
-
-        function openUploadModal() {
-            if (!isAdmin) {
-                openAdminLogin();
-                return;
-            }
-            document.getElementById('uploadModal').classList.add('active');
-        }
-
-        // ===== FILTER =====
-        function filterPrompts(category) {
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            renderPrompts(category);
-        }
-
-        // ===== UTILS =====
-        function saveData() { localStorage.setItem('phl_prompts', JSON.stringify(prompts)); }
-
-        function updateStats() {
-            document.getElementById('promptCount').textContent = prompts.length;
-            const dl = parseInt(localStorage.getItem('phl_downloads') || '0');
-            document.getElementById('downloadCount').textContent = dl;
-            const cats = [...new Set(prompts.map(p => p.category))];
-            document.getElementById('categoryCount').textContent = cats.length;
-
-            // Update filter bar
-            const filterBar = document.querySelector('.filter-bar');
-            filterBar.innerHTML = `<button class="filter-btn active" onclick="filterPrompts('all')">All</button>` +
-                cats.map(c => `<button class="filter-btn" onclick="filterPrompts('${c}')">${c}</button>`).join('');
-
-            // Re-attach active state
-            filterBar.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-        }
-
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `<i class="fas ${icons[type]}" style="color:${type === 'success' ? '#00ff99' : type === 'error' ? '#ff2d95' : '#00f0ff'}"></i> <span>${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-
-        // Close modals on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) overlay.classList.remove('active');
-            });
         });
 
-        // Init on load
-        init();
-		const firebaseConfig = {
-  apiKey: "AIzaSyDPUzx5JbHacz7Rs9LDgA5ps3ge-SFdzmM",
-  authDomain: "prompt-hack-lab.firebaseapp.com",
-  projectId: "prompt-hack-lab",
-  storageBucket: "prompt-hack-lab.firebasestorage.app",
-  messagingSenderId: "150199660353",
-  appId: "1:150199660353:web:2273ab8d813f8bccb3fbc0"
-};
+        // ============================================================
+        //  DATA LAYER — All reads/writes go through Firebase
+        // ============================================================
+
+        // --- Fetch all prompts, sorted newest first ---
+        function fetchPrompts(callback) {
+            db.ref('prompts').once('value', (snapshot) => {
+                const data = snapshot.val();
+                let prompts = data ? Object.values(data) : [];
+                prompts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                callback(prompts);
+            });
+        }
+
+        // --- Save a single prompt ---
+        function savePromptToDb(prompt) {
+            db.ref('prompts/' + prompt.id).set(prompt);
+        }
+
+        // --- Delete a prompt ---
+        function deletePromptFromDb(id) {
+            db.ref('prompts/' + id).remove();
+        }
+
+        // --- Update download count on a prompt ---
+        function updatePromptDownloads(id, count) {
+            db.ref('prompts/' + id + '/downloads').set(count);
+        }
+
+        // --- Get redirect URL ---
+        function fetchRedirectUrl(callback) {
+            db.ref('settings/redirectUrl').once('value', (snapshot) => {
+                callback(snapshot.val() || '');
+            });
+        }
+
+        // --- Save redirect URL ---
+        function saveRedirectUrl(url) {
+            db.ref('settings/redirectUrl').set(url);
+        }
+
+        // --- Log a download event ---
+        function logDownload(promptId, promptTitle) {
+            db.ref('downloadLogs').push({
+                promptId: promptId,
+                promptTitle: promptTitle,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent.substring(0, 120)
+            });
+        }
+
+        // --- Get total download count ---
+        function fetchTotalDownloads(callback) {
+            db.ref('stats/totalDownloads').once('value', (snapshot) => {
+                callback(snapshot.val() || 0);
+            });
+        }
+
+        // --- Increment total download count atomically ---
+        function incrementTotalDownloads() {
+            db.ref('stats/totalDownloads').transaction((current) => {
+                return (current || 0) + 1;
+            });
+        }
+
+        // --- Download state per browser (still localStorage, user-specific) ---
+        const DOWNLOAD_STATE_KEY = 'phl_download_states';
+        function getDownloadStates() {
+            try { return JSON.parse(localStorage.getItem(DOWNLOAD_STATE_KEY)) || {}; }
+            catch { return {}; }
+        }
+        function setDownloadState(promptId, state) {
+            const states = getDownloadStates();
+            states[promptId] = state;
+            localStorage.setItem(DOWNLOAD_STATE_KEY, JSON.stringify(states));
+        }
+
+        // ============================================================
+        //  TOAST SYSTEM
+        // ============================================================
+        function showToast(message, type) {
+            type = type || 'info';
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+            toast.innerHTML = '<i class="fas ' + (icons[type] || icons.info) + '"></i><span>' + message + '</span>';
+            container.appendChild(toast);
+            setTimeout(function() {
+                toast.classList.add('toast-exit');
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3500);
+        }
+
+        // ============================================================
+        //  ADMIN PANEL
+        // ============================================================
+        const adminOverlay = document.getElementById('adminOverlay');
+        const adminToggleBtn = document.getElementById('adminToggleBtn');
+        const adminCloseBtn = document.getElementById('adminCloseBtn');
+
+        adminToggleBtn.addEventListener('click', function() {
+            adminOverlay.classList.add('open');
+            fetchRedirectUrl(function(url) {
+                document.getElementById('redirectUrlInput').value = url;
+            });
+            renderAdminPromptList();
+            document.body.style.overflow = 'hidden';
+        });
+
+        adminCloseBtn.addEventListener('click', closeAdmin);
+        adminOverlay.addEventListener('click', function(e) {
+            if (e.target === adminOverlay) closeAdmin();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && adminOverlay.classList.contains('open')) closeAdmin();
+        });
+
+        function closeAdmin() {
+            adminOverlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // ============================================================
+        //  FILE UPLOAD HANDLING
+        // ============================================================
+        const fileInput = document.getElementById('fileInput');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileNameDisplay = document.getElementById('fileName');
+        let uploadedFileData = null;
+        let uploadedFileName = '';
+
+        fileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        });
+        fileUploadArea.addEventListener('dragleave', function() {
+            fileUploadArea.classList.remove('dragover');
+        });
+        fileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length) handleFile(fileInput.files[0]);
+        });
+
+        function handleFile(file) {
+            // Limit file size to ~5MB for Firebase RTDB
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('File too large. Max 5MB for database storage.', 'error');
+                return;
+            }
+            uploadedFileName = file.name;
+            fileNameDisplay.textContent = uploadedFileName;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedFileData = e.target.result; // base64 data URL
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ============================================================
+        //  FORM SUBMISSION — Upload prompt to Firebase
+        // ============================================================
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var title = document.getElementById('promptTitle').value.trim();
+            var desc = document.getElementById('promptDesc').value.trim();
+            var category = document.getElementById('promptCategory').value;
+            var fileType = document.getElementById('fileType').value;
+            var content = document.getElementById('promptContent').value.trim();
+
+            if (!title || !desc) {
+                showToast('Please fill in title and description.', 'error');
+                return;
+            }
+            if (!content && !uploadedFileData) {
+                showToast('Please provide prompt content or upload a file.', 'error');
+                return;
+            }
+
+            // Determine final file type based on upload
+            var finalFileType = fileType;
+            if (uploadedFileData) {
+                if (uploadedFileName.endsWith('.md')) finalFileType = 'text/markdown';
+                else finalFileType = 'text/plain';
+            }
+
+            var prompt = {
+                id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                title: title,
+                desc: desc,
+                category: category,
+                fileType: finalFileType,
+                content: uploadedFileData || content,
+                fileName: uploadedFileName || null,
+                date: new Date().toISOString(),
+                downloads: 0
+            };
+
+            savePromptToDb(prompt);
+
+            // Reset form
+            document.getElementById('uploadForm').reset();
+            fileNameDisplay.textContent = '';
+            uploadedFileData = null;
+            uploadedFileName = '';
+
+            showToast('Prompt added successfully!', 'success');
+            renderAdminPromptList();
+            loadAndRenderPrompts();
+        });
+
+        // ============================================================
+        //  ADMIN: LIST & DELETE PROMPTS
+        // ============================================================
+        function renderAdminPromptList() {
+            var container = document.getElementById('adminPromptItems');
+            var wrapper = document.getElementById('adminPromptList');
+
+            if (allPrompts.length === 0) {
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            wrapper.style.display = 'block';
+            var html = '';
+            for (var i = 0; i < allPrompts.length; i++) {
+                var p = allPrompts[i];
+                html += '<div class="admin-prompt-item">' +
+                    '<div class="item-info">' +
+                        '<div class="item-title">' + escapeHtml(p.title) + '</div>' +
+                        '<div class="item-cat">' + escapeHtml(p.category) + ' &middot; ' + (p.downloads || 0) + ' downloads</div>' +
+                    '</div>' +
+                    '<button class="item-delete" onclick="deletePrompt(\'' + p.id + '\')" aria-label="Delete" title="Delete">' +
+                        '<i class="fas fa-trash-can"></i>' +
+                    '</button>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        }
+
+        function deletePrompt(id) {
+            deletePromptFromDb(id);
+            showToast('Prompt deleted.', 'info');
+            renderAdminPromptList();
+            loadAndRenderPrompts();
+        }
+
+        // ============================================================
+        //  REDIRECT URL SAVE
+        // ============================================================
+        document.getElementById('redirectUrlInput').addEventListener('change', function(e) {
+            saveRedirectUrl(e.target.value.trim());
+            showToast('Redirect URL saved.', 'success');
+        });
+
+        // ============================================================
+        //  RENDER PROMPT CARDS
+        // ============================================================
+        var currentCategory = 'all';
+        var searchQuery = '';
+        var allPrompts = []; // Global cache of all prompts from Firebase
+
+        function loadAndRenderPrompts() {
+            fetchPrompts(function(prompts) {
+                allPrompts = prompts;
+                buildCategoryFilter();
+                filterAndRender();
+                updateStats();
+            });
+        }
+
+        function filterAndRender() {
+            var grid = document.getElementById('promptGrid');
+            var filtered = allPrompts;
+
+            if (currentCategory !== 'all') {
+                filtered = filtered.filter(function(p) { return p.category === currentCategory; });
+            }
+            if (searchQuery) {
+                var q = searchQuery.toLowerCase();
+                filtered = filtered.filter(function(p) {
+                    return p.title.toLowerCase().indexOf(q) !== -1 ||
+                           p.desc.toLowerCase().indexOf(q) !== -1 ||
+                           p.category.toLowerCase().indexOf(q) !== -1;
+                });
+            }
+
+            if (filtered.length === 0) {
+                var msg = allPrompts.length === 0
+                    ? '<h3>No Prompts Yet</h3><p>Open the admin panel to upload your first prompt.</p>'
+                    : '<h3>No Matches Found</h3><p>Try a different search or category.</p>';
+                grid.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i>' + msg + '</div>';
+                return;
+            }
+
+            var downloadStates = getDownloadStates();
+            var html = '';
+
+            for (var i = 0; i < filtered.length; i++) {
+                var p = filtered[i];
+                var hasClickedOnce = downloadStates[p.id] === 'redirected';
+                var btnClass = hasClickedOnce ? 'secondary' : 'primary';
+                var btnText = hasClickedOnce
+                    ? '<i class="fas fa-download"></i> Download Now'
+                    : '<i class="fas fa-arrow-down"></i> Download Prompt';
+                var dateStr = new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                var sizeLabel = p.fileName ? p.fileName.split('.').pop().toUpperCase() : 'TXT';
+
+                html += '<div class="prompt-card" style="animation-delay:' + (i * 0.06) + 's">' +
+                    '<div class="card-top">' +
+                        '<span class="card-category">' + escapeHtml(p.category) + '</span>' +
+                        '<span class="card-date">' + dateStr + '</span>' +
+                    '</div>' +
+                    '<h3 class="card-title">' + escapeHtml(p.title) + '</h3>' +
+                    '<p class="card-desc">' + escapeHtml(p.desc) + '</p>' +
+                    '<div class="card-meta">' +
+                        '<span><i class="fas fa-file-lines"></i> ' + sizeLabel + '</span>' +
+                        '<span><i class="fas fa-arrow-down"></i> ' + (p.downloads || 0) + '</span>' +
+                    '</div>' +
+                    '<button class="download-btn ' + btnClass + '" onclick="handleDownload(\'' + p.id + '\', event)" data-prompt-id="' + p.id + '">' +
+                        btnText +
+                    '</button>' +
+                '</div>';
+            }
+
+            grid.innerHTML = html;
+        }
+
+        // ============================================================
+        //  TWO-CLICK DOWNLOAD LOGIC
+        // ============================================================
+        function handleDownload(promptId, event) {
+            // Ripple effect
+            var btn = event.currentTarget;
+            var ripple = document.createElement('span');
+            ripple.className = 'btn-ripple';
+            var rect = btn.getBoundingClientRect();
+            var size = Math.max(rect.width, rect.height);
+            ripple.style.width = size + 'px';
+            ripple.style.height = size + 'px';
+            ripple.style.left = (event.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (event.clientY - rect.top - size / 2) + 'px';
+            btn.appendChild(ripple);
+            setTimeout(function() { ripple.remove(); }, 600);
+
+            // Find the prompt
+            var prompt = null;
+            for (var i = 0; i < allPrompts.length; i++) {
+                if (allPrompts[i].id === promptId) { prompt = allPrompts[i]; break; }
+            }
+            if (!prompt) return;
+
+            var downloadStates = getDownloadStates();
+
+            if (downloadStates[promptId] !== 'redirected') {
+                // === FIRST CLICK: Redirect to external URL ===
+                setDownloadState(promptId, 'redirected');
+                filterAndRender();
+
+                fetchRedirectUrl(function(redirectUrl) {
+                    if (redirectUrl) {
+                        window.open(redirectUrl, '_blank');
+                        showToast('Complete one step, then click Download Now!', 'info');
+                    } else {
+                        showToast('Click the button again to start download.', 'info');
+                    }
+                });
+            } else {
+                // === SECOND CLICK: Start actual download ===
+                triggerDownload(prompt);
+                setDownloadState(promptId, 'done');
+
+                var newCount = (prompt.downloads || 0) + 1;
+                updatePromptDownloads(promptId, newCount);
+                incrementTotalDownloads();
+                logDownload(promptId, prompt.title);
+
+                // Update local cache
+                prompt.downloads = newCount;
+
+                showToast('Download started!', 'success');
+                filterAndRender();
+                updateStats();
+            }
+        }
+
+        // ============================================================
+        //  FILE DOWNLOAD TRIGGER
+        // ============================================================
+        function triggerDownload(prompt) {
+            var blob, fileName;
+
+            if (prompt.content && prompt.content.indexOf('data:') === 0) {
+                // Base64 data URL from file upload
+                var byteString = atob(prompt.content.split(',')[1]);
+                var mimeString = prompt.content.split(',')[0].split(':')[1].split(';')[0];
+                var ab = new ArrayBuffer(byteString.length);
+                var ia = new Uint8Array(ab);
+                for (var i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                blob = new Blob([ab], { type: mimeString });
+                fileName = prompt.fileName || 'prompt.txt';
+            } else {
+                // Plain text content
+                var ext = prompt.fileType === 'text/markdown' ? '.md' : '.txt';
+                blob = new Blob([prompt.content], { type: prompt.fileType || 'text/plain' });
+                fileName = prompt.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + ext;
+            }
+
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+        }
+
+        // ============================================================
+        //  CATEGORY FILTER
+        // ============================================================
+        function buildCategoryFilter() {
+            var catSet = {};
+            for (var i = 0; i < allPrompts.length; i++) {
+                catSet[allPrompts[i].category] = true;
+            }
+            var categories = Object.keys(catSet);
+
+            var container = document.getElementById('categoryFilter');
+            var html = '<button class="cat-btn ' + (currentCategory === 'all' ? 'active' : '') + '" data-cat="all">All</button>';
+            for (var j = 0; j < categories.length; j++) {
+                html += '<button class="cat-btn ' + (currentCategory === categories[j] ? 'active' : '') + '" data-cat="' + escapeHtml(categories[j]) + '">' + escapeHtml(categories[j]) + '</button>';
+            }
+            container.innerHTML = html;
+
+            // Re-attach click listeners
+            var btns = container.querySelectorAll('.cat-btn');
+            for (var k = 0; k < btns.length; k++) {
+                btns[k].addEventListener('click', function() {
+                    var allBtns = container.querySelectorAll('.cat-btn');
+                    for (var m = 0; m < allBtns.length; m++) allBtns[m].classList.remove('active');
+                    this.classList.add('active');
+                    currentCategory = this.getAttribute('data-cat');
+                    filterAndRender();
+                });
+            }
+        }
+
+        // ============================================================
+        //  SEARCH
+        // ============================================================
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            searchQuery = e.target.value.trim();
+            filterAndRender();
+        });
+
+        // ============================================================
+        //  STATS
+        // ============================================================
+        function updateStats() {
+            var catSet = {};
+            var promptDownloads = 0;
+            for (var i = 0; i < allPrompts.length; i++) {
+                catSet[allPrompts[i].category] = true;
+                promptDownloads += (allPrompts[i].downloads || 0);
+            }
+            var categoryCount = Object.keys(catSet).length;
+
+            animateCounter('statPrompts', allPrompts.length);
+            animateCounter('statCategories', categoryCount);
+            document.getElementById('totalPromptCount').textContent = allPrompts.length;
+
+            fetchTotalDownloads(function(dbDownloads) {
+                animateCounter('statDownloads', promptDownloads + dbDownloads);
+            });
+        }
+
+        function animateCounter(id, target) {
+            var el = document.getElementById(id);
+            var current = parseInt(el.textContent) || 0;
+            if (current === target) return;
+            var diff = target - current;
+            var steps = 30;
+            var step = 0;
+            var interval = setInterval(function() {
+                step++;
+                el.textContent = Math.round(current + (diff * (step / steps)));
+                if (step >= steps) {
+                    el.textContent = target;
+                    clearInterval(interval);
+                }
+            }, 20);
+        }
+
+        // ============================================================
+        //  HEADER SCROLL EFFECT
+        // ============================================================
+        window.addEventListener('scroll', function() {
+            document.getElementById('header').classList.toggle('scrolled', window.scrollY > 20);
+        });
+
+        // ============================================================
+        //  PARTICLE SYSTEM
+        // ============================================================
+        (function() {
+            var canvas = document.getElementById('particles-canvas');
+            var ctx = canvas.getContext('2d');
+            var w, h, particles = [], mouse = { x: -999, y: -999 };
+
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+            document.addEventListener('mousemove', function(e) {
+                mouse.x = e.clientX; mouse.y = e.clientY;
+            });
+
+            var PARTICLE_COUNT = 60;
+            for (var i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push({
+                    x: Math.random() * (w || 1200),
+                    y: Math.random() * (h || 800),
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    r: Math.random() * 1.5 + 0.5,
+                    alpha: Math.random() * 0.3 + 0.1
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+                for (var i = 0; i < particles.length; i++) {
+                    var p = particles[i];
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+                    if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+
+                    var dx = p.x - mouse.x, dy = p.y - mouse.y;
+                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        var force = (120 - dist) / 120 * 0.02;
+                        p.vx += dx * force; p.vy += dy * force;
+                    }
+                    p.vx *= 0.99; p.vy *= 0.99;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, Math.max(0.1, p.r), 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(212, 168, 67, ' + p.alpha + ')';
+                    ctx.fill();
+                }
+
+                for (var i = 0; i < particles.length; i++) {
+                    for (var j = i + 1; j < particles.length; j++) {
+                        var dx = particles[i].x - particles[j].x;
+                        var dy = particles[i].y - particles[j].y;
+                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = 'rgba(212, 168, 67, ' + (0.06 * (1 - dist / 150)) + ')';
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        // ============================================================
+        //  UTILITY
+        // ============================================================
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ============================================================
+        //  SEED DEMO DATA — Runs only if database is empty
+        // ============================================================
+        function seedFirebaseIfEmpty() {
+            db.ref('prompts').once('value', function(snapshot) {
+                if (!snapshot.exists()) {
+                    var demoPrompts = [
+                        {
+                            id: 'demo_1',
+                            title: 'Cinematic Landscape Generator',
+                            desc: 'A meticulously crafted Midjourney prompt that generates breathtaking cinematic landscape images with dramatic lighting, atmospheric depth, and film-grade color grading.',
+                            category: 'Midjourney',
+                            fileType: 'text/plain',
+                            content: 'A vast cinematic landscape at golden hour, rolling misty mountains in the background, a reflective lake in the foreground catching the last amber rays of sunlight, volumetric fog drifting between pine trees, shot on ARRI ALEXA 65, anamorphic lens flare, color graded in DaVinci Resolve with teal and orange split toning, ultra-detailed, 8K resolution --ar 21:9 --v 6 --style raw',
+                            fileName: null,
+                            date: new Date(Date.now() - 86400000 * 2).toISOString(),
+                            downloads: 147
+                        },
+                        {
+                            id: 'demo_2',
+                            title: 'Full-Stack SaaS Boilerplate Builder',
+                            desc: 'A comprehensive ChatGPT prompt that walks through building a complete SaaS boilerplate including auth, billing, database schema, API routes, and frontend components.',
+                            category: 'ChatGPT',
+                            fileType: 'text/markdown',
+                            content: '# Full-Stack SaaS Boilerplate Builder\n\nYou are an expert full-stack developer. Generate a complete SaaS boilerplate with the following specifications:\n\n## Tech Stack\n- Next.js 14 (App Router)\n- TypeScript\n- Prisma ORM with PostgreSQL\n- NextAuth.js for authentication\n- Stripe for billing\n- Tailwind CSS for styling\n- Resend for transactional emails\n\n## Requirements\n1. **Authentication**: Email/password login, OAuth (Google, GitHub), magic links, password reset flow\n2. **Database Schema**: Users, Organizations, Memberships, Subscriptions, API Keys, Usage Logs\n3. **Billing**: Free tier, Pro tier, Enterprise tier with usage-based add-ons\n4. **API**: RESTful endpoints with rate limiting, CRUD operations for all models\n5. **Frontend**: Dashboard layout, settings page, billing management, team management, usage analytics\n6. **Middleware**: Auth guards, role-based access control, subscription checks\n\nGenerate each file with complete, production-ready code. Include error handling, input validation, and TypeScript types throughout.',
+                            fileName: null,
+                            date: new Date(Date.now() - 86400000).toISOString(),
+                            downloads: 312
+                        },
+                        {
+                            id: 'demo_3',
+                            title: 'SEO Blog Post Architect',
+                            desc: 'Claude prompt that structures and writes fully optimized SEO blog posts with internal linking suggestions, schema markup, and content brief compliance.',
+                            category: 'Claude',
+                            fileType: 'text/plain',
+                            content: 'Act as a senior SEO content strategist and copywriter. I will provide you with a target keyword and content brief. You will produce a complete, publication-ready blog post that follows these exact standards:\n\n1. **Title Tag**: 55-60 characters, keyword near the front, power word included\n2. **Meta Description**: 150-160 characters, includes keyword, has a CTA\n3. **URL Slug**: Short, keyword-focused, hyphenated\n4. **Outline**: H2/H3 hierarchy that covers intent comprehensively (informational + commercial)\n5. **Introduction**: Hook in first line, keyword in first 100 words, clear thesis\n6. **Body Content**: Each H2 section 200-400 words, short paragraphs (2-3 sentences), bullet lists for scannability, bold key phrases\n7. **Internal Links**: Suggest 3-5 internal link opportunities with anchor text\n8. **FAQ Section**: 4-6 questions based on People Also Ask, concise answers (40-60 words each)\n9. **Schema Markup**: Generate FAQPage and Article JSON-LD\n10. **Word Count Target**: 1800-2500 words\n\nOutput the complete post in Markdown format.',
+                            fileName: null,
+                            date: new Date().toISOString(),
+                            downloads: 89
+                        },
+                        {
+                            id: 'demo_4',
+                            title: 'Product Photography Prompt Suite',
+                            desc: 'A collection of 12 DALL-E prompts for generating professional product photography across different styles — minimal, lifestyle, flat lay, and editorial.',
+                            category: 'DALL-E',
+                            fileType: 'text/plain',
+                            content: '## DALL-E Product Photography Prompt Suite\n\n### 1. Minimal White Background\n"Professional product photography of [PRODUCT], centered on a pure white background, soft studio lighting from the upper left, subtle shadow underneath, shot with a 100mm macro lens, f/2.8, razor-sharp focus, commercial quality, clean and premium feel"\n\n### 2. Lifestyle Context\n"[PRODUCT] placed on a rustic wooden table beside a cup of coffee and dried eucalyptus, warm morning sunlight streaming through a window, shallow depth of field, cozy lifestyle aesthetic, shot on Canon EOS R5, 85mm f/1.4"\n\n### 3. Flat Lay\n"Overhead flat lay of [PRODUCT] surrounded by complementary accessories and props, arranged on a light marble surface, even softbox lighting, pastel color palette, editorial magazine style, perfectly symmetrical composition"\n\n### 4. Dark Moody\n"[PRODUCT] on a dark charcoal slate surface, dramatic side lighting creating deep shadows, a single warm accent light, smoke or mist in the background, luxury premium aesthetic, high contrast, shot on medium format"\n\n### 5. Color Splash\n"[PRODUCT] against a solid [COLOR] background, paint splashes and drips in complementary colors, dynamic and energetic composition, commercial advertising style, vibrant and saturated"\n\n### 6. Nature Integration\n"[PRODUCT] nestled among lush green tropical leaves and ferns, dappled natural sunlight, water droplets on surfaces, fresh and organic feel, macro detail on textures"\n\n### 7. Neon Cyberpunk\n"[PRODUCT] on a wet reflective surface, neon pink and cyan lights in the background, rain particles visible, futuristic cyberpunk aesthetic, high tech feel, cinematic color grading"\n\n### 8. Gradient Abstract\n"[PRODUCT] floating in front of a smooth gradient background transitioning from [COLOR1] to [COLOR2], minimalist and modern, soft shadows, Apple-style product photography"\n\n### 9. Seasonal Theme\n"[PRODUCT] arranged with [SEASONAL ELEMENTS like pumpkins/pinecones/flowers], seasonal color palette, warm inviting lighting, holiday marketing ready, lifestyle photography"\n\n### 10. Studio Ring Light\n"[PRODUCT] with a visible ring light reflection in its surface, pure black background, front-facing symmetrical lighting, modern tech product launch style, clean and dramatic"\n\n### 11. Floating Suspended\n"[PRODUCT] appearing to float in mid-air, suspended by invisible threads, dramatic uplighting, dark background with subtle gradient, magical and premium feel, commercial quality"\n\n### 12. Split Composition\n"Diagonally split composition with [PRODUCT] on one side and its key feature/detail on the other, contrasting backgrounds, bold graphic design approach, editorial style"',
+                            fileName: null,
+                            date: new Date(Date.now() - 86400000 * 3).toISOString(),
+                            downloads: 203
+                        }
+                    ];
+
+                    // Save each demo prompt to Firebase
+                    var updates = {};
+                    for (var i = 0; i < demoPrompts.length; i++) {
+                        updates['prompts/' + demoPrompts[i].id] = demoPrompts[i];
+                    }
+                    updates['stats/totalDownloads'] = 751;
+                    db.ref().update(updates);
+                }
+            });
+        }
+
+        // ============================================================
+        //  INITIALIZATION
+        // ============================================================
+        seedFirebaseIfEmpty();
+        loadAndRenderPrompts();
     </script>
 </body>
 </html>
