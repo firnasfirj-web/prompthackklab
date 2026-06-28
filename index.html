@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Hack Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #222240;
+            --accent: #00f0ff;
+            --accent2: #7b2fff;
+            --accent3: #ff2d95;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888aa;
+            --border: #2a2a40;
+            --glass: rgba(26, 26, 46, 0.7);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== ANIMATED BACKGROUND ===== */
+        .bg-grid {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0; pointer-events: none;
+        }
+
+        .bg-glow {
+            position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 40%, rgba(0,240,255,0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 60%, rgba(123,47,255,0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 80%, rgba(255,45,149,0.03) 0%, transparent 50%);
+            z-index: 0; pointer-events: none; animation: glowMove 20s ease-in-out infinite;
+        }
+
+        @keyframes glowMove {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(2%, -2%); }
+            66% { transform: translate(-2%, 2%); }
+        }
+
+        /* ===== NAVBAR ===== */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: rgba(10,10,15,0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem; height: 70px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .nav-brand {
+            display: flex; align-items: center; gap: 12px; text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 18px;
+            color: #0a0a0f; box-shadow: 0 0 20px rgba(0,240,255,0.3);
+        }
+
+        .nav-title {
+            font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1.3rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links { display: flex; align-items: center; gap: 20px; }
+
+        .nav-links a {
+            color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;
+            font-weight: 500; transition: all 0.3s; position: relative;
+        }
+
+        .nav-links a:hover { color: var(--accent); }
+
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px;
+            background: var(--accent); transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after { width: 100%; }
+
+        .btn-admin {
+            background: linear-gradient(135deg, var(--accent2), var(--accent3));
+            color: #fff; padding: 8px 20px; border-radius: 8px; border: none;
+            cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600;
+            font-size: 0.85rem; transition: all 0.3s; text-decoration: none;
+        }
+
+        .btn-admin:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(123,47,255,0.4); }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            min-height: 70vh; display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 120px 2rem 60px; position: relative; z-index: 1;
+        }
+
+        .hero-content { max-width: 800px; }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(0,240,255,0.08); border: 1px solid rgba(0,240,255,0.2);
+            padding: 6px 18px; border-radius: 50px; font-size: 0.8rem;
+            color: var(--accent); margin-bottom: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .hero-badge .pulse {
+            width: 8px; height: 8px; background: var(--accent); border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif; font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900; line-height: 1.1; margin-bottom: 1.5rem;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.1rem; color: var(--text-secondary); line-height: 1.8;
+            max-width: 600px; margin: 0 auto 2.5rem;
+        }
+
+        .hero-stats {
+            display: flex; justify-content: center; gap: 3rem; margin-top: 3rem;
+        }
+
+        .hero-stat { text-align: center; }
+
+        .hero-stat .number {
+            font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .hero-stat .label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
+
+        /* ===== PROMPTS SECTION ===== */
+        .section { padding: 4rem 2rem; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+
+        .section-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 700;
+        }
+
+        .section-title .highlight { color: var(--accent); }
+
+        .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .filter-btn {
+            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+            padding: 8px 18px; border-radius: 50px; cursor: pointer; font-size: 0.82rem;
+            transition: all 0.3s; font-family: 'Inter', sans-serif;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: rgba(0,240,255,0.1); border-color: var(--accent); color: var(--accent);
+        }
+
+        /* ===== PROMPT CARDS ===== */
+        .prompts-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .prompt-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.5rem; position: relative;
+            transition: all 0.4s; overflow: hidden;
+        }
+
+        .prompt-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+            opacity: 0; transition: opacity 0.3s;
+        }
+
+        .prompt-card:hover { border-color: rgba(0,240,255,0.3); transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+
+        .prompt-card:hover::before { opacity: 1; }
+
+        .card-header { display: flex; align-items: start; justify-content: space-between; margin-bottom: 1rem; }
+
+        .card-category {
+            font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
+            color: var(--accent); text-transform: uppercase; letter-spacing: 1px;
+            background: rgba(0,240,255,0.08); padding: 4px 10px; border-radius: 4px;
+        }
+
+        .card-featured {
+            color: var(--accent3); font-size: 0.85rem;
+        }
+
+        .card-title {
+            font-size: 1.15rem; font-weight: 600; margin-bottom: 0.7rem; line-height: 1.4;
+        }
+
+        .card-desc {
+            font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;
+            margin-bottom: 1.2rem;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-meta {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-top: 1rem; border-top: 1px solid var(--border);
+        }
+
+        .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .card-tag {
+            font-size: 0.7rem; color: var(--text-secondary); background: var(--bg-secondary);
+            padding: 3px 8px; border-radius: 4px;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #0a0a0f; border: none; padding: 10px 22px; border-radius: 8px;
+            cursor: pointer; font-weight: 700; font-size: 0.85rem;
+            font-family: 'Inter', sans-serif; transition: all 0.3s;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .btn-download:hover {
+            transform: scale(1.05); box-shadow: 0 4px 20px rgba(0,240,255,0.3);
+        }
+
+        .btn-download.second-click {
+            background: linear-gradient(135deg, #00cc88, #00ff99);
+            animation: glowPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0,255,153,0.3); }
+            50% { box-shadow: 0 0 25px rgba(0,255,153,0.6); }
+        }
+
+        /* ===== MODALS ===== */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            z-index: 2000; display: none; align-items: center; justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 20px; width: 100%; max-width: 550px; padding: 2rem;
+            position: relative; animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-close {
+            position: absolute; top: 1rem; right: 1rem; background: none; border: none;
+            color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover { color: var(--text-primary); }
+
+        .modal h2 {
+            font-family: 'Orbitron', sans-serif; font-size: 1.4rem; margin-bottom: 1.5rem;
+        }
+
+        .form-group { margin-bottom: 1.2rem; }
+
+        .form-group label {
+            display: block; font-size: 0.85rem; color: var(--text-secondary);
+            margin-bottom: 6px; font-weight: 500;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px 16px; color: var(--text-primary);
+            font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none; border-color: var(--accent);
+        }
+
+        .form-group textarea { min-height: 100px; resize: vertical; }
+
+        .btn-submit {
+            width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #0a0a0f; border: none; padding: 14px; border-radius: 10px;
+            cursor: pointer; font-weight: 700; font-size: 1rem;
+            font-family: 'Inter', sans-serif; transition: all 0.3s; margin-top: 0.5rem;
+        }
+
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0,240,255,0.3); }
+
+        /* ===== ADMIN LOGIN ===== */
+        .login-input {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px 16px; color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;
+            width: 100%; margin-top: 0.5rem;
+        }
+
+        .login-input:focus { outline: none; border-color: var(--accent2); }
+
+        /* ===== TOAST ===== */
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 3000;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 14px 20px; min-width: 280px; display: flex; align-items: center; gap: 10px;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .toast.success { border-left: 4px solid #00ff99; }
+        .toast.error { border-left: 4px solid var(--accent3); }
+        .toast.info { border-left: 4px solid var(--accent); }
+
+        @keyframes toastIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(50px); } }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center; padding: 4rem 2rem; color: var(--text-secondary);
+        }
+
+        .empty-state i { font-size: 3rem; margin-bottom: 1rem; color: var(--border); }
+
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center; padding: 3rem 2rem; border-top: 1px solid var(--border);
+            margin-top: 4rem; position: relative; z-index: 1;
+        }
+
+        .footer-brand {
+            font-family: 'Orbitron', sans-serif; font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            font-size: 1.1rem; margin-bottom: 0.5rem;
+        }
+
+        footer p { color: var(--text-secondary); font-size: 0.85rem; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .nav-links a:not(.btn-admin) { display: none; }
+            .prompts-grid { grid-template-columns: 1fr; }
+            .hero-stats { flex-direction: column; gap: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- NAVBAR -->
+    <nav>
+        <a href="#" class="nav-brand">
+            <div class="nav-logo">PH</div>
+            <span class="nav-title">PROMPT HACK LAB</span>
+        </a>
+        <div class="nav-links">
+            <a href="#prompts">Browse</a>
+            <a href="#" onclick="openUploadModal()">Upload</a>
+            <button class="btn-admin" onclick="openAdminLogin()"><i class="fas fa-lock"></i> Admin</button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge"><div class="pulse"></div> Curated AI Prompts</div>
+            <h1>Unlock the Power of <span class="gradient-text">Prompt Engineering</span></h1>
+            <p>Discover, download, and deploy battle-tested AI prompts crafted for maximum performance. Your secret weapon for AI mastery.</p>
+            <div class="hero-stats">
+                <div class="hero-stat"><div class="number" id="promptCount">0</div><div class="label">Prompts</div></div>
+                <div class="hero-stat"><div class="number" id="downloadCount">0</div><div class="label">Downloads</div></div>
+                <div class="hero-stat"><div class="number" id="categoryCount">0</div><div class="label">Categories</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROMPTS SECTION -->
+    <section class="section" id="prompts">
+        <div class="section-header">
+            <h2 class="section-title">Latest <span class="highlight">Prompts</span></h2>
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="filterPrompts('all')">All</button>
+            </div>
+        </div>
+        <div class="prompts-grid" id="promptsGrid"></div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-brand">PROMPT HACK LAB</div>
+        <p>&copy; 2026 Prompt Hack Lab. All rights reserved.</p>
+    </footer>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div class="modal-overlay" id="adminLoginModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('adminLoginModal')">&times;</button>
+            <h2><i class="fas fa-shield-halved" style="color:var(--accent2);"></i> Admin Access</h2>
+            <form onsubmit="adminLogin(event)">
+                <div class="form-group">
+                    <label>Enter Admin Password</label>
+                    <input type="password" class="login-input" id="adminPassword" placeholder="••••••••" autocomplete="off">
+                </div>
+                <button type="submit" class="btn-submit">Unlock Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- UPLOAD MODAL -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('uploadModal')">&times;</button>
+            <h2><i class="fas fa-cloud-arrow-up" style="color:var(--accent);"></i> Upload Prompt</h2>
+            <form onsubmit="uploadPrompt(event)">
+                <div class="form-group">
+                    <label>Prompt Title *</label>
+                    <input type="text" id="promptTitle" placeholder="e.g. Ultimate Midjourney V6 Prompt" required>
+                </div>
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="promptCategory" required>
+                        <option value="">Select category</option>
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Midjourney">Midjourney</option>
+                        <option value="Stable Diffusion">Stable Diffusion</option>
+                        <option value="DALL-E">DALL-E</option>
+                        <option value="Coding">Coding</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Writing">Writing</option>
+                        <option value="Business">Business</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description *</label>
+                    <textarea id="promptDesc" placeholder="Brief description of what this prompt does..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Prompt Content *</label>
+                    <textarea id="promptContent" placeholder="Paste the full prompt text here..." required style="min-height:140px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Redirect Link (first click) *</label>
+                    <input type="url" id="promptRedirect" placeholder="https://example.com/your-link" required>
+                </div>
+                <div class="form-group">
+                    <label>Tags (comma-separated)</label>
+                    <input type="text" id="promptTags" placeholder="e.g. ai, art, creative">
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-rocket"></i> Publish Prompt</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ===== CONFIG =====
+        const ADMIN_PASSWORD = 'Firnas1999@';
+        let isAdmin = false;
+        let prompts = [];
+        let clickStates = {}; // track first-click state per prompt
+
+        // ===== INIT =====
+        function init() {
+            const stored = localStorage.getItem('phl_prompts');
+            if (stored) prompts = JSON.parse(stored);
+            else loadDefaults();
+            renderPrompts();
+            updateStats();
+        }
+
+        function loadDefaults() {
+            prompts = [
+                {
+                    id: 'p1', title: 'Cinematic Midjourney V6 Master Prompt',
+                    category: 'Midjourney',
+                    desc: 'Generate breathtaking, hyper-detailed cinematic scenes with perfect lighting and composition. Works with Midjourney V6 for photorealistic outputs.',
+                    content: 'cinematic photography, {subject}, dramatic {lighting} lighting, shot on ARRI Alexa 65, anamorphic lens, shallow depth of field, film grain, color grading by {colorist}, 8K resolution, photorealistic --ar 16:9 --v 6 --style raw',
+                    redirect: 'https://www.youtube.com/@yourchannel',
+                    tags: ['midjourney', 'cinematic', 'photorealistic'],
+                    featured: true,
+                    date: '2026-06-27'
+                },
+                {
+                    id: 'p2', title: 'ChatGPT Expert System Prompt',
+                    category: 'ChatGPT',
+                    desc: 'Transform ChatGPT into an elite domain expert who provides structured, actionable advice with zero fluff.',
+                    content: 'You are an elite {domain} expert with 30 years of experience. When I ask a question: 1) Give a direct answer first. 2) Provide a detailed explanation. 3) Include real-world examples. 4) List 3 actionable takeaways. 5) Suggest next steps. Never use filler phrases. Be concise and authoritative.',
+                    redirect: 'https://www.youtube.com/@yourchannel',
+                    tags: ['chatgpt', 'system-prompt', 'expert'],
+                    featured: false,
+                    date: '2026-06-26'
+                },
+                {
+                    id: 'p3', title: 'Viral Social Media Content Generator',
+                    category: 'Marketing',
+                    desc: 'Create scroll-stopping social media posts that drive engagement, saves, and shares across all platforms.',
+                    content: 'Create a viral {platform} post about {topic}. Requirements: Hook in first line (shock/pain/curiosity), use short paragraphs (2-3 lines max), include a counterintuitive insight, end with an engagement question, add 5 relevant hashtags. Tone: {tone}. Format: Make it scannable with line breaks and emojis.',
+                    redirect: 'https://www.youtube.com/@yourchannel',
+                    tags: ['social-media', 'marketing', 'viral'],
+                    featured: true,
+                    date: '2026-06-25'
+                }
+            ];
+            saveData();
+        }
+
+        // ===== RENDER =====
+        function renderPrompts(filter = 'all') {
+            const grid = document.getElementById('promptsGrid');
+            const filtered = filter === 'all' ? prompts : prompts.filter(p => p.category === filter);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-folder-open"></i><p>No prompts found. Upload one now!</p></div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="prompt-card">
+                    <div class="card-header">
+                        <span class="card-category">${p.category}</span>
+                        ${p.featured ? '<span class="card-featured"><i class="fas fa-fire"></i> Featured</span>' : ''}
+                    </div>
+                    <h3 class="card-title">${p.title}</h3>
+                    <p class="card-desc">${p.desc}</p>
+                    <div class="card-meta">
+                        <div class="card-tags">${(p.tags || []).map(t => `<span class="card-tag">#${t}</span>`).join('')}</div>
+                        <button class="btn-download" id="dl-${p.id}" onclick="handleDownload('${p.id}')">
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Reset click states
+            clickStates = {};
+        }
+
+        // ===== TWO-CLICK DOWNLOAD SYSTEM =====
+        function handleDownload(id) {
+            const prompt = prompts.find(p => p.id === id);
+            if (!prompt) return;
+
+            const btn = document.getElementById(`dl-${id}`);
+
+            if (!clickStates[id]) {
+                // FIRST CLICK → redirect to the specified link
+                clickStates[id] = true;
+                window.open(prompt.redirect, '_blank');
+                btn.classList.add('second-click');
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Click Again to Download';
+                showToast('Redirected! Click again to download the prompt.', 'info');
+            } else {
+                // SECOND CLICK → download the prompt as a text file
+                const blob = new Blob([prompt.content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${prompt.title.replace(/[^a-z0-9]/gi, '_')}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // Reset button
+                btn.classList.remove('second-click');
+                btn.innerHTML = '<i class="fas fa-download"></i> Download';
+                clickStates[id] = false;
+
+                // Update download count
+                let dc = parseInt(localStorage.getItem('phl_downloads') || '0') + 1;
+                localStorage.setItem('phl_downloads', dc);
+                updateStats();
+
+                showToast('Prompt downloaded successfully!', 'success');
+            }
+        }
+
+        // ===== UPLOAD PROMPT =====
+        function uploadPrompt(e) {
+            e.preventDefault();
+            const title = document.getElementById('promptTitle').value.trim();
+            const category = document.getElementById('promptCategory').value;
+            const desc = document.getElementById('promptDesc').value.trim();
+            const content = document.getElementById('promptContent').value.trim();
+            const redirect = document.getElementById('promptRedirect').value.trim();
+            const tagsStr = document.getElementById('promptTags').value.trim();
+
+            if (!title || !category || !desc || !content || !redirect) {
+                showToast('Please fill in all required fields.', 'error');
+                return;
+            }
+
+            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim().toLowerCase()) : [];
+            const newPrompt = {
+                id: 'p' + Date.now(),
+                title, category, desc, content, redirect, tags,
+                featured: false,
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            prompts.unshift(newPrompt);
+            saveData();
+            renderPrompts();
+            updateStats();
+            closeModal('uploadModal');
+            e.target.reset();
+            showToast('Prompt published successfully!', 'success');
+        }
+
+        // ===== ADMIN =====
+        function openAdminLogin() {
+            document.getElementById('adminLoginModal').classList.add('active');
+        }
+
+        function adminLogin(e) {
+            e.preventDefault();
+            const pw = document.getElementById('adminPassword').value;
+            if (pw === ADMIN_PASSWORD) {
+                isAdmin = true;
+                closeModal('adminLoginModal');
+                showToast('Admin access granted!', 'success');
+            } else {
+                showToast('Incorrect password.', 'error');
+            }
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function openUploadModal() {
+            if (!isAdmin) {
+                openAdminLogin();
+                return;
+            }
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        // ===== FILTER =====
+        function filterPrompts(category) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderPrompts(category);
+        }
+
+        // ===== UTILS =====
+        function saveData() { localStorage.setItem('phl_prompts', JSON.stringify(prompts)); }
+
+        function updateStats() {
+            document.getElementById('promptCount').textContent = prompts.length;
+            const dl = parseInt(localStorage.getItem('phl_downloads') || '0');
+            document.getElementById('downloadCount').textContent = dl;
+            const cats = [...new Set(prompts.map(p => p.category))];
+            document.getElementById('categoryCount').textContent = cats.length;
+
+            // Update filter bar
+            const filterBar = document.querySelector('.filter-bar');
+            filterBar.innerHTML = `<button class="filter-btn active" onclick="filterPrompts('all')">All</button>` +
+                cats.map(c => `<button class="filter-btn" onclick="filterPrompts('${c}')">${c}</button>`).join('');
+
+            // Re-attach active state
+            filterBar.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="fas ${icons[type]}" style="color:${type === 'success' ? '#00ff99' : type === 'error' ? '#ff2d95' : '#00f0ff'}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+
+        // Init on load
+        init();
+		const firebaseConfig = {
+  apiKey: "AIzaSyDPUzx5JbHacz7Rs9LDgA5ps3ge-SFdzmM",
+  authDomain: "prompt-hack-lab.firebaseapp.com",
+  projectId: "prompt-hack-lab",
+  storageBucket: "prompt-hack-lab.firebasestorage.app",
+  messagingSenderId: "150199660353",
+  appId: "1:150199660353:web:2273ab8d813f8bccb3fbc0"
+};
+    </script>
+</body>
+</html>
